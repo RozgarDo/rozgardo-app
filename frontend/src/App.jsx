@@ -34,18 +34,18 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.clear();
-    window.location.href = '/login'; 
+    window.location.href = '/login';
   };
 
   // Protected Route Wrapper
   const ProtectedRoute = ({ children, allowedRoles }) => {
     if (!user) {
-        console.log("Redirecting to login: User not authenticated");
-        return <Navigate to="/login" replace />;
+      console.log("Redirecting to login: User not authenticated");
+      return <Navigate to="/login" replace />;
     }
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        console.warn(`Access Denied. User role '${user.role}' lacks permission for this route. Allowed roles: ${allowedRoles.join(', ')}`);
-        return <Navigate to="/" replace />;
+      console.warn(`Access Denied. User role '${user.role}' lacks permission for this route. Allowed roles: ${allowedRoles.join(', ')}`);
+      return <Navigate to="/" replace />;
     }
     return children;
   };
@@ -60,29 +60,23 @@ function App() {
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
             <Route path="/home" element={<Landing />} />
             <Route path="/test" element={<TestPage />} />
-            
-            {/* Employee Routes */}
-            <Route path="/" element={
-              <ProtectedRoute allowedRoles={['employee', 'admin', 'employer']}>
-                {user?.role === 'employer' ? <Navigate to="/employer" /> : 
-                 user?.role === 'admin' ? <Navigate to="/admin" /> : 
-                 <EmployeeHome user={user} />}
+
+            {/* Root - Jobs Listing (For Vercel/deployed site) */}
+            <Route path="/" element={<EmployeeHome user={user || { role: 'employee' }} />} />
+            <Route path="/profile" element={
+              <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
+                <Profile user={user} setUser={handleLogin} />
               </ProtectedRoute>
             } />
-            <Route path="/profile" element={
-               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
-                 <Profile user={user} setUser={handleLogin} />
-               </ProtectedRoute>
-            } />
             <Route path="/profile-setup" element={
-               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
-                 <Profile user={user} setUser={handleLogin} />
-               </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
+                <Profile user={user} setUser={handleLogin} />
+              </ProtectedRoute>
             } />
             <Route path="/settings" element={
-               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
-                 <Settings user={user} />
-               </ProtectedRoute>
+              <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
+                <Settings user={user} />
+              </ProtectedRoute>
             } />
             <Route path="/jobs/:id" element={
               <ProtectedRoute allowedRoles={['employee']}>
