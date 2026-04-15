@@ -6,11 +6,14 @@ import EmployeeHome from './pages/employee/Home';
 import Profile from './pages/Profile';
 import JobDetails from './pages/employee/JobDetails';
 import Applications from './pages/employee/Applications';
+import AllJobs from './pages/employee/AllJobs';
 import EmployerDashboard from './pages/employer/Dashboard';
 import PostJob from './pages/employer/PostJob';
 import AdminDashboard from './pages/admin/Dashboard';
 import Landing from './pages/Landing';
 import TestPage from './pages/TestPage';
+import Settings from './pages/Settings';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -30,7 +33,8 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.clear();
+    window.location.href = '/login'; 
   };
 
   // Protected Route Wrapper
@@ -48,6 +52,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="flex flex-col min-h-screen">
         <Navbar user={user} onLogout={handleLogout} />
         <main className="main-content">
@@ -74,6 +79,11 @@ function App() {
                  <Profile user={user} setUser={handleLogin} />
                </ProtectedRoute>
             } />
+            <Route path="/settings" element={
+               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
+                 <Settings user={user} />
+               </ProtectedRoute>
+            } />
             <Route path="/jobs/:id" element={
               <ProtectedRoute allowedRoles={['employee']}>
                 <JobDetails user={user} />
@@ -82,6 +92,11 @@ function App() {
             <Route path="/applications" element={
               <ProtectedRoute allowedRoles={['employee']}>
                 <Applications user={user} />
+              </ProtectedRoute>
+            } />
+            <Route path="/all-jobs" element={
+              <ProtectedRoute allowedRoles={['employee']}>
+                <AllJobs user={user} />
               </ProtectedRoute>
             } />
 

@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
 import { ShieldCheck, UserPlus, Phone, Lock, Mail } from 'lucide-react';
+import './Login.css';
 
 const Login = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const otpRefs = useRef([]);
   
   const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
   const [otpSent, setOtpSent] = useState(false);
@@ -17,7 +16,15 @@ const Login = ({ onLogin }) => {
   const [role, setRole] = useState('employee');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    }
+  }, [timeLeft]);
 
   // Route after login based on role constraints
   const routeUser = (user) => {
@@ -40,6 +47,7 @@ const Login = ({ onLogin }) => {
            const data = await res.json();
            setOtpSent(true);
            setMessage(data.message);
+           setTimeLeft(30);
        } else {
            if (res.status === 404) {
                setError('Mobile number not found. Please register.');
@@ -51,9 +59,10 @@ const Login = ({ onLogin }) => {
        }
      } catch (err) {
        console.error(err);
-       setError('Login service unavailable fallback. Mocking OTP Sent.');
+       setError('Login service unavailable fallback. Mocking OTP.');
        setOtpSent(true);
-       setMessage('OTP Sent successfully (Use 123456 for testing)');
+       setMessage('OTP Sent. Use 123456');
+       setTimeLeft(30);
      }
   };
 
@@ -61,12 +70,14 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     setMessage('');
+    
+    let finalOtp = Array.isArray(otp) ? otp.join('') : otp;
 
     try {
       const endpoint = isRegistering ? 'http://localhost:5001/api/auth/register' : 'http://localhost:5001/api/auth/login';
       let body = isRegistering 
           ? { phone: loginId, role, name: '', skills: '', location: '', password } 
-          : { loginId, type: authMethod, password, otp };
+          : { loginId, type: authMethod, password, otp: finalOtp };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -83,161 +94,210 @@ const Login = ({ onLogin }) => {
       routeUser(data.user);
       
       } catch (err) {
-      console.error(err);
-      if (isRegistering || otp === '123456' || (authMethod === 'password')) {
-          // MOCK LOGIN FALLBACK
-          const mockUser = {
-              id: Math.random().toString(),
-              phone: loginId,
-              email: loginId.includes('@') ? loginId : null,
-              role: isRegistering ? role : (loginId === '9999999999' ? 'admin' : (loginId === '8888888888' ? 'employer' : 'employee')), 
-              name: isRegistering ? '' : (loginId === '9999999999' ? 'Admin Master' : 'User')
-          };
-          routeUser(mockUser);
-      } else {
-          setError(err.message);
-      }
+      console.error('Login Error:', err);
+      setError(err.message || 'Login failed. Please check your credentials or network.');
+    }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value !== '' && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
     }
   };
 
   if (isRegistering) {
      return (
-        <div className="container flex items-center justify-center min-h-[80vh] page-enter">
-          <Card className="w-full max-w-md p-8 glass" hoverEffect={true}>
-            <div className="text-center mb-8">
-                <div className="mx-auto bg-indigo-100 text-primary w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                   <UserPlus size={32} />
+        <div className="login-page-container">
+          <div className="login-card">
+            <div className="login-header">
+                <div className="login-icon-container">
+                   <UserPlus size={24} />
                 </div>
-                <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-                <p className="text-muted">Join RozgarDo today</p>
+                <h1 className="login-title">Create Account</h1>
+                <p className="login-subtitle">Join RozgarDo today</p>
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                <Input 
-                   label="Mobile Number" 
-                   type="tel" 
-                   value={loginId}
-                   onChange={(e) => setLoginId(e.target.value)}
-                   required
-                />
-                <Input 
-                   label="Create Password (Optional)" 
-                   type="password"
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                />
-                <div className="flex flex-col gap-2">
-                   <label className="text-sm font-medium text-gray-700">I am a...</label>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <div className="login-form-group">
+                   <label className="login-label">Mobile Number</label>
+                   <div className="login-input-wrapper">
+                      <Phone className="login-input-icon" />
+                      <input 
+                         type="tel" 
+                         className={`login-input ${error && !loginId ? 'error' : ''}`}
+                         placeholder="+91..."
+                         value={loginId}
+                         onChange={(e) => setLoginId(e.target.value)}
+                         required
+                      />
+                   </div>
+                </div>
+                
+                <div className="login-form-group">
+                   <label className="login-label">Create Password (Optional)</label>
+                   <div className="login-input-wrapper">
+                      <Lock className="login-input-icon" />
+                      <input 
+                         type="password"
+                         className="login-input"
+                         placeholder="Enter secure password"
+                         value={password}
+                         onChange={(e) => setPassword(e.target.value)}
+                      />
+                   </div>
+                </div>
+
+                <div className="flex flex-col gap-1 mt-1">
+                   <label className="text-xs font-semibold text-gray-700">I am a...</label>
                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="radio" name="role" value="employee" checked={role === 'employee'} onChange={(e) => setRole(e.target.value)} /> Looking for Job
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                         <input type="radio" name="role" value="employee" checked={role === 'employee'} onChange={(e) => setRole(e.target.value)} className="accent-primary" /> Looking for Job
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="radio" name="role" value="employer" checked={role === 'employer'} onChange={(e) => setRole(e.target.value)} /> Hiring
+                      <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                         <input type="radio" name="role" value="employer" checked={role === 'employer'} onChange={(e) => setRole(e.target.value)} className="accent-primary" /> Hiring
                       </label>
                    </div>
                 </div>
-                {error && <div className="p-3 bg-red-50 text-danger rounded-md text-sm">{error}</div>}
-                <Button type="submit" size="lg" className="w-full">Register</Button>
-                <p className="text-center text-sm text-muted">
+
+                {error && <div className="login-message error">{error}</div>}
+                
+                <button type="submit" className="login-btn-submit">Register</button>
+                
+                <p className="login-footer-text">
                    Already have an account? 
-                   <button type="button" className="text-primary font-medium ml-2 hover:underline" onClick={() => setIsRegistering(false)}>Login</button>
+                   <button type="button" className="login-register-link" onClick={() => setIsRegistering(false)}>Login</button>
                 </p>
             </form>
-          </Card>
+          </div>
         </div>
      );
   }
 
   return (
-    <div className="container flex items-center justify-center min-h-[80vh] page-enter">
-      <Card className="w-full max-w-md p-8 glass" hoverEffect={true}>
-        <div className="text-center mb-6">
-            <div className="mx-auto bg-indigo-100 text-primary w-16 h-16 rounded-full flex items-center justify-center mb-4">
-               <ShieldCheck size={32} />
+    <div className="login-page-container">
+      <div className="login-card">
+        <div className="login-header">
+            <div className="login-icon-container">
+               <ShieldCheck size={28} />
             </div>
-            <h1 className="text-3xl font-bold mb-2">Login</h1>
-            <p className="text-muted">Access your RozgarDo account</p>
+            <h1 className="login-title">Login</h1>
+            <p className="login-subtitle">Access your RozgarDo account</p>
         </div>
 
         {/* Auth Method Tabs */}
-        <div className="flex border-b border-gray-200 mb-6">
+        <div className="login-toggle-container">
            <button 
-              className={`flex-1 py-3 font-semibold text-sm transition-colors ${authMethod === 'otp' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => { setAuthMethod('otp'); setOtpSent(false); setError(''); setMessage(''); }}
+              type="button"
+              className={`login-toggle-btn ${authMethod === 'otp' ? 'active' : 'inactive'}`}
+              onClick={() => { setAuthMethod('otp'); setOtpSent(false); setError(''); setMessage(''); setOtp(['','','','','','']); }}
            >
               Login via OTP
            </button>
            <button 
-              className={`flex-1 py-3 font-semibold text-sm transition-colors ${authMethod === 'password' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+              type="button"
+              className={`login-toggle-btn ${authMethod === 'password' ? 'active' : 'inactive'}`}
               onClick={() => { setAuthMethod('password'); setError(''); setMessage(''); }}
            >
               Login via Password
            </button>
         </div>
 
-        <form onSubmit={authMethod === 'otp' && !otpSent ? (e) => { e.preventDefault(); handleSendOtp(); } : handleSubmit} className="flex flex-col gap-5">
-          <div className="relative">
-             <Input 
-               label={authMethod === 'otp' ? "Mobile Number" : "Mobile / Email ID"}
-               type={authMethod === 'otp' ? "tel" : "text"}
-               placeholder={authMethod === 'otp' ? "+91..." : "Enter Mobile or Email"}
-               value={loginId}
-               onChange={(e) => setLoginId(e.target.value)}
-               disabled={otpSent}
-               required
-               containerStyle={{ paddingLeft: '0' }}
-             />
-             {authMethod === 'otp' ? (
-                <Phone className="absolute right-3 top-9 text-gray-400" size={20} />
-             ) : (
-                <Mail className="absolute right-3 top-9 text-gray-400" size={20} />
-             )}
+        <form onSubmit={authMethod === 'otp' && !otpSent ? (e) => { e.preventDefault(); handleSendOtp(); } : handleSubmit} className="flex flex-col gap-3 form-fade-enter">
+          
+          <div className="login-form-group">
+             <label className="login-label">
+                {authMethod === 'otp' ? "Mobile Number" : "Mobile / Email ID"}
+             </label>
+             <div className="login-input-wrapper">
+                {authMethod === 'otp' ? (
+                   <Phone className="login-input-icon" />
+                ) : (
+                   <Mail className="login-input-icon" />
+                )}
+                <input 
+                   type={authMethod === 'otp' ? "tel" : "text"}
+                   className={`login-input ${error && !(Array.isArray(otp) ? otp.join('') : '') ? 'error' : ''}`}
+                   placeholder={authMethod === 'otp' ? "+91..." : "Enter Mobile or Email"}
+                   value={loginId}
+                   onChange={(e) => setLoginId(e.target.value)}
+                   disabled={otpSent}
+                   required
+                />
+             </div>
           </div>
 
           {authMethod === 'password' && (
-             <div className="relative">
-                <Input 
-                   label="Password" 
-                   type="password" 
-                   placeholder="Enter your password"
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                   required
-                />
-                <Lock className="absolute right-3 top-9 text-gray-400" size={20} />
+             <div className="login-form-group form-fade-enter">
+                <label className="login-label">Password</label>
+                <div className="login-input-wrapper">
+                   <Lock className="login-input-icon" />
+                   <input 
+                      type="password"
+                      className="login-input"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                   />
+                </div>
              </div>
           )}
 
           {authMethod === 'otp' && otpSent && (
-             <div className="page-enter">
-                <Input 
-                   label="Enter OTP" 
-                   type="text" 
-                   placeholder="6-digit code"
-                   value={otp}
-                   onChange={(e) => setOtp(e.target.value)}
-                   required
-                   maxLength={6}
-                />
-                <button type="button" className="text-primary text-xs font-semibold mt-2 hover:underline" onClick={handleSendOtp}>Resend OTP</button>
+             <div className="login-form-group form-fade-enter">
+                <label className="login-label">Enter OTP</label>
+                <div className="otp-inputs-container">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={el => otpRefs.current[index] = el}
+                      type="text"
+                      maxLength={1}
+                      className="otp-box"
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    />
+                  ))}
+                </div>
+                <div className="resend-text-container">
+                  Didn't receive OTP?
+                  <button 
+                    type="button" 
+                    className="resend-link" 
+                    onClick={handleSendOtp}
+                    disabled={timeLeft > 0}
+                  >
+                    {timeLeft > 0 ? `Resend in ${timeLeft}s` : 'Resend'}
+                  </button>
+                </div>
              </div>
           )}
 
-          {message && <div className="p-3 bg-green-50 text-success rounded-md text-sm font-medium border border-green-100">{message}</div>}
-          {error && <div className="p-3 bg-red-50 text-danger rounded-md text-sm border border-red-100">{error}</div>}
+          {message && <div className="login-message success mt-1">{message}</div>}
+          {error && <div className="login-message error mt-1">{error}</div>}
 
-          <Button type="submit" size="lg" className="w-full mt-2">
+          <button type="submit" className="login-btn-submit">
             {authMethod === 'otp' ? (otpSent ? 'Verify & Login' : 'Get OTP') : 'Login'}
-          </Button>
+          </button>
 
-          <p className="text-center text-sm text-muted mt-4">
-             New to QuickRozgar? 
-             <button type="button" className="text-primary font-medium ml-2 hover:underline" onClick={() => setIsRegistering(true)}>
+          <p className="login-footer-text">
+             New to RozgarDo? 
+             <button type="button" className="login-register-link" onClick={() => setIsRegistering(true)}>
                 Register for Free
              </button>
           </p>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };

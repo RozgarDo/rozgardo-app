@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -120,6 +124,7 @@ ul {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: all 0.2s ease-in-out;
 }
 
 .badge-pending { background-color: #FEF3C7; color: var(--color-warning); }
@@ -128,6 +133,7 @@ ul {
 .badge-applied { background-color: #DBEAFE; color: var(--color-primary); }
 .badge-shortlisted { background-color: #E0E7FF; color: #4338CA; }
 .badge-interview { background-color: #FCE7F3; color: #BE185D; }
+.badge-hired { background-color: #D1FAE5; color: var(--color-success); }
 .badge-selected { background-color: #D1FAE5; color: var(--color-success); }
 
 /* Glassmorphism utility for modern look */
