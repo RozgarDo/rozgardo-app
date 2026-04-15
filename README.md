@@ -1,61 +1,48 @@
-# RozgarDo
+# RozgarDo - Job Marketplace App (Monorepo)
 
-A job portal application connecting employers with job seekers.
+A full-stack job marketplace application built with React, Node.js, and Supabase, optimized for Vercel deployment.
 
-## Features
+## 🚀 Project Structure
 
-- User authentication (Admin, Employer, Employee roles)
-- Job posting and management
-- Application tracking
-- Profile management
+- **/frontend**: React + Vite application.
+- **/backend**: Serverless Node.js functions (Vercel compatible).
+- **vercel.json**: Main configuration for monorepo routing.
 
-## Tech Stack
+## 🛠️ Local Development
 
-- **Frontend:** React, React Router, Vite
-- **Backend:** Express.js, Supabase
-- **Database:** PostgreSQL (via Supabase)
+### 1. Prerequisites
+- Node.js (v18+)
+- Vercel CLI (`npm i -g vercel`)
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js installed
-- Supabase account with configured database
-
-### Installation
-
+### 2. Setup
+Clone the repository and install dependencies in both folders:
 ```bash
-# Install backend dependencies
-cd backend && npm install
-
-# Install frontend dependencies
+# Frontend
 cd frontend && npm install
+
+# Backend
+cd backend && npm install
 ```
 
-### Running the App
-
+### 3. Running Locally
+To run both the frontend and serverless functions locally, use the Vercel CLI from the root:
 ```bash
-# Start backend (port 5000)
-cd backend && node server.js
-
-# Start frontend (port 5173)
-cd frontend && npm run dev
+vercel dev
 ```
+Alternatively, run them separately:
+- **Frontend**: `cd frontend && npm run dev` (Runs on http://localhost:5173)
+- **Backend**: `cd backend && node server.js` (Runs on http://localhost:5001)
 
-### Seeding Database
+## 📦 Deployment on Vercel
 
-```bash
-node backend/seed.js
-```
+1. Push your code to a GitHub repository.
+2. Go to [Vercel](https://vercel.com) and click **"Add New" > "Project"**.
+3. Import your repository.
+4. Vercel will automatically detect the `vercel.json` and configure:
+   - Frontend at `/`
+   - Backend APIs at `/_/backend/`
+5. Add your Supabase environment variables in the Vercel Dashboard.
 
-### Default Login Credentials
-
-| Role    | Phone     | OTP    |
-|---------|-----------|-------|
-| Admin   | 9999999999| 123456|
-| Employer| 8888888888| 123456|
-| Employee| 7777777777| 123456|
-
-## License
-
-ISC
+## 📝 API Endpoints (Serverless)
+- `GET /_/backend/jobs`: Returns a list of jobs.
+- `POST /_/backend/login`: Handles user authentication.

@@ -250,12 +250,12 @@ const ContactItem = ({ icon, text }) => (
 const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  const options = [
-    { value: 'applied', label: 'Applied', icon: <Clock size={14} />, color: 'text-gray-400' },
-    { value: 'shortlisted', label: 'Shortlist', icon: <Check size={14} />, color: 'text-indigo-600' },
-    { value: 'interview', label: 'Interview', icon: <Users size={14} />, color: 'text-pink-600' },
-    { value: 'hired', label: 'Hire Candidate', icon: <UserCheck size={14} />, color: 'text-emerald-600' },
-    { value: 'rejected', label: 'Reject', icon: <XCircle size={14} />, color: 'text-rose-600' },
+  const statusOptions = [
+    { label: "Applied", value: "applied" },
+    { label: "Shortlist", value: "shortlisted" },
+    { label: "Call for Interview", value: "interview" },
+    { label: "Select & Hire", value: "hired" },
+    { label: "Reject", value: "rejected" },
   ];
 
   return (
@@ -269,7 +269,7 @@ const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
       >
         <span className="flex items-center gap-2">
           {isLoading ? <Loader2 size={14} className="animate-spin text-indigo-600" /> : <div className="w-1.5 h-1.5 rounded-full bg-current"></div>}
-          {currentStatus === 'selected' ? 'hired' : currentStatus}
+          {currentStatus}
         </span>
         <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -279,7 +279,7 @@ const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-2 w-full origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="py-1">
-              {options.map((option) => (
+              {statusOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => {
@@ -290,7 +290,13 @@ const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
                     currentStatus === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'
                   }`}
                 >
-                  <span className={option.color}>{option.icon}</span>
+                  <span className="text-current">
+                    {option.value === 'shortlisted' && <Check size={14} />}
+                    {option.value === 'interview' && <Users size={14} />}
+                    {option.value === 'hired' && <UserCheck size={14} />}
+                    {option.value === 'rejected' && <XCircle size={14} />}
+                    {option.value === 'applied' && <Clock size={14} />}
+                  </span>
                   {option.label}
                 </button>
               ))}
