@@ -1,4 +1,4 @@
-# RozgarDo - Job Marketplace App (Monorepo)
+# RozgarDo - Job Marketplace App for Blue Collar Employee
 
 A full-stack job marketplace application built with React, Node.js, and Supabase, optimized for Vercel deployment.
 
