@@ -60,8 +60,8 @@ function App() {
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
 <Route path="/home" element={<Landing user={user} />} />
 
-            {/* Root - Landing (Coming Soon) */}
-            <Route path="/" element={<Landing user={user} />} />
+            {/* Root - Landing (Coming Soon) or redirect for admin */}
+            <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
             <Route path="/profile" element={
               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
                 <Profile user={user} setUser={handleLogin} />
