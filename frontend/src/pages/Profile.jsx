@@ -18,6 +18,7 @@ const Profile = ({ user, setUser }) => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  const isEmployer = user?.role === 'employer';
   const [formData, setFormData] = useState({
     first_name: user?.first_name || user?.name?.split(' ')[0] || '',
     last_name: user?.last_name || user?.name?.split(' ').slice(1).join(' ') || '',
@@ -27,10 +28,12 @@ const Profile = ({ user, setUser }) => {
     country: user?.country || 'India',
     bio: user?.bio || '',
     photo_url: user?.photo_url || '',
-    skills: user?.skills ? (typeof user.skills === 'string' ? user.skills.split(',').map(s => s.trim()) : user.skills) : ['Driving', 'Cooking'],
-    experience: user?.experience || [
+    company_name: user?.company_name || '',
+    company_description: user?.company_description || '',
+    skills: isEmployer ? [] : (user?.skills ? (typeof user.skills === 'string' ? user.skills.split(',').map(s => s.trim()) : user.skills) : ['Driving', 'Cooking']),
+    experience: isEmployer ? [] : (user?.experience || [
       { title: 'Delivery Executive', company: 'Zomato', duration: '2 years' },
-    ],
+    ]),
     resume_name: user?.resume_name || '',
     job_type: user?.job_type || 'Full-time',
     preferred_location: user?.preferred_location || '',
@@ -250,10 +253,17 @@ const Profile = ({ user, setUser }) => {
                 <option value="India">India</option><option value="USA">USA</option><option value="UK">UK</option><option value="Canada">Canada</option>
               </select>
             </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <div style={labelStyle}>Bio</div>
-              <textarea name="bio" value={formData.bio} onChange={handleChange} rows={3} placeholder="Tell us about yourself..." style={{ ...inputStyle, resize: 'none', minHeight: '80px' }} />
-            </div>
+            {isEmployer ? (
+              <>
+                <div><div style={labelStyle}>Company Name</div><input name="company_name" value={formData.company_name} onChange={handleChange} style={inputStyle} placeholder="Your company name" /></div>
+                <div><div style={labelStyle}>Company Description</div><textarea name="company_description" value={formData.company_description} onChange={handleChange} rows={3} placeholder="Describe your company..." style={{ ...inputStyle, resize: 'none', minHeight: '80px' }} /></div>
+              </>
+            ) : (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={labelStyle}>Bio</div>
+                <textarea name="bio" value={formData.bio} onChange={handleChange} rows={3} placeholder="Tell us about yourself..." style={{ ...inputStyle, resize: 'none', minHeight: '80px' }} />
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
@@ -271,7 +281,38 @@ const Profile = ({ user, setUser }) => {
         )}
       </div>
 
-      {/* === SECTION 2: SKILLS === */}
+      {/* === COMPANY INFO SECTION (for employers) === */}
+      {isEmployer && (
+        <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
+          {editingSection !== SECTION.PERSONAL && (
+            <button style={editBtnStyle} onClick={() => setEditingSection(SECTION.PERSONAL)}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={15} color="#64748B" /></button>
+          )}
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Briefcase size={18} color="#4F46E5" /> Company Details
+          </h3>
+          {editingSection === SECTION.PERSONAL ? (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div><div style={labelStyle}>Company Name</div><input name="company_name" value={formData.company_name} onChange={handleChange} style={inputStyle} placeholder="Your company name" /></div>
+              <div><div style={labelStyle}>Company Description</div><textarea name="company_description" value={formData.company_description} onChange={handleChange} rows={4} placeholder="Describe your company..." style={{ ...inputStyle, resize: 'none', minHeight: '100px' }} /></div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <InfoField icon={<Briefcase size={15} color="#94A3B8" />} label="Company Name" value={formData.company_name || 'Not set'} missing={!formData.company_name} />
+              {formData.company_description && (
+                <div>
+                  <div style={labelStyle}>Description</div>
+                  <p style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.6 }}>{formData.company_description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isEmployer && (
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
         {editingSection !== SECTION.SKILLS && (
           <button style={editBtnStyle} onClick={() => setEditingSection(SECTION.SKILLS)}
@@ -303,8 +344,9 @@ const Profile = ({ user, setUser }) => {
           </div>
         )}
       </div>
+      )}
 
-      {/* === SECTION 3: EXPERIENCE === */}
+      {!isEmployer && (
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
         {editingSection !== SECTION.EXPERIENCE && (
           <button style={editBtnStyle} onClick={() => setEditingSection(SECTION.EXPERIENCE)}
@@ -344,8 +386,9 @@ const Profile = ({ user, setUser }) => {
           </button>
         )}
       </div>
+      )}
 
-      {/* === SECTION 4: JOB PREFERENCES === */}
+      {!isEmployer && (
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
         {editingSection !== SECTION.PREFERENCES && (
           <button style={editBtnStyle} onClick={() => setEditingSection(SECTION.PREFERENCES)}
@@ -375,6 +418,7 @@ const Profile = ({ user, setUser }) => {
           </div>
         )}
       </div>
+      )}
 
       {/* Bottom save bar (when any section is being edited) */}
       {editingSection !== SECTION.NONE && (

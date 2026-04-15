@@ -58,11 +58,10 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
-            <Route path="/home" element={<Landing />} />
-            <Route path="/test" element={<TestPage />} />
+<Route path="/home" element={<Landing user={user} />} />
 
-            {/* Root - Jobs Listing (For Vercel/deployed site) */}
-            <Route path="/" element={<EmployeeHome user={user || { role: 'employee' }} />} />
+            {/* Root - Landing (Coming Soon) */}
+            <Route path="/" element={<Landing user={user} />} />
             <Route path="/profile" element={
               <ProtectedRoute allowedRoles={['employee', 'employer', 'admin']}>
                 <Profile user={user} setUser={handleLogin} />
